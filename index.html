@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chinese & English Matching Game</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎴</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-top">
+      <h1 id="page-title">Match the Words!</h1>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" id="lang-en" class="btn btn-lang active" data-lang="en">English</button>
+        <button type="button" id="lang-zh" class="btn btn-lang" data-lang="zh">中文</button>
+      </div>
+    </div>
+    <p class="instruction" id="instruction">Click two cards to find matching pairs — Chinese and English.</p>
+  </header>
+
+  <main class="main">
+    <div class="controls">
+      <label for="set-select" id="set-label">Choose a set:</label>
+      <select id="set-select" aria-label="Choose word set">
+        <option value="">Loading...</option>
+      </select>
+      <label for="level-select" id="level-label">Level:</label>
+      <select id="level-select" aria-label="Level">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+      </select>
+      <button type="button" id="next-btn" class="btn btn-primary">Next</button>
+    </div>
+
+    <div id="game-area" class="game-area" aria-live="polite">
+      <!-- Cards rendered by game.js -->
+    </div>
+
+    <div id="win-message" class="win-message hidden" role="alert">
+      <p id="win-text">You did it! Great job!</p>
+      <button type="button" id="win-next-btn" class="btn btn-primary">Next</button>
+    </div>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

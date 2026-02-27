@@ -1,0 +1,221 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(160deg, #e8f4f8 0%, #f0e6fa 100%);
+  min-height: 100vh;
+  color: #1a1a2e;
+}
+
+.header {
+  text-align: center;
+  padding: 1.25rem 1rem;
+  background: rgba(255, 255, 255, 0.7);
+  border-bottom: 3px solid #6b4ce6;
+}
+
+.header-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  color: #2d1b69;
+}
+
+.lang-toggle {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.btn-lang {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.95rem;
+  background: rgba(107, 76, 230, 0.15);
+  color: #2d1b69;
+  border: 2px solid #6b4ce6;
+  border-radius: 8px;
+}
+
+.btn-lang:hover,
+.btn-lang:focus-visible {
+  background: rgba(107, 76, 230, 0.25);
+}
+
+.btn-lang.active {
+  background: linear-gradient(135deg, #6b4ce6 0%, #8b5cf6 100%);
+  color: #fff;
+  border-color: #6b4ce6;
+}
+
+.instruction {
+  margin: 0;
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  color: #444;
+}
+
+.main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.controls label {
+  font-weight: 600;
+  color: #333;
+}
+
+#set-select,
+#level-select {
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 2px solid #6b4ce6;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.btn {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(107, 76, 230, 0.35);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6b4ce6 0%, #8b5cf6 100%);
+  color: #fff;
+}
+
+.game-area {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+  justify-content: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.card {
+  aspect-ratio: 1;
+  min-height: 100px;
+  perspective: 600px;
+  cursor: pointer;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease;
+  transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card.matched .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-back {
+  background: linear-gradient(145deg, #6b4ce6 0%, #8b5cf6 100%);
+  color: #fff;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+}
+
+.card-back::after {
+  content: "?";
+  font-size: 1.8em;
+  opacity: 0.9;
+}
+
+.card-front {
+  background: #fff;
+  color: #1a1a2e;
+  border: 3px solid #6b4ce6;
+  transform: rotateY(180deg);
+}
+
+.card.matched .card-front {
+  background: linear-gradient(145deg, #86efac 0%, #4ade80 100%);
+  border-color: #22c55e;
+  color: #166534;
+}
+
+.card.chinese .card-front {
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.win-message {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  border: 3px solid #22c55e;
+  margin-top: 1.5rem;
+}
+
+.win-message p {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.win-message .btn {
+  margin: 0 auto;
+}
+
+@media (min-width: 500px) {
+  .game-area {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}

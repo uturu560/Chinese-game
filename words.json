@@ -1,0 +1,88 @@
+{
+  "sets": [
+    {
+      "id": "animals",
+      "name": "Animals",
+      "pairs": [
+        ["狗", "dog"],
+        ["猫", "cat"],
+        ["鸟", "bird"],
+        ["鱼", "fish"],
+        ["兔", "rabbit"],
+        ["马", "horse"],
+        ["牛", "cow"],
+        ["羊", "sheep"],
+        ["猪", "pig"],
+        ["鸡", "chicken"],
+        ["鸭", "duck"],
+        ["鼠", "mouse"],
+        ["虎", "tiger"],
+        ["龙", "dragon"],
+        ["蛇", "snake"]
+      ]
+    },
+    {
+      "id": "colors",
+      "name": "Colors",
+      "pairs": [
+        ["红", "red"],
+        ["蓝", "blue"],
+        ["黄", "yellow"],
+        ["绿", "green"],
+        ["黑", "black"],
+        ["白", "white"],
+        ["橙", "orange"],
+        ["紫", "purple"],
+        ["粉", "pink"],
+        ["棕", "brown"],
+        ["灰", "grey"],
+        ["金", "gold"],
+        ["银", "silver"],
+        ["青", "cyan"],
+        ["米", "beige"]
+      ]
+    },
+    {
+      "id": "numbers",
+      "name": "Numbers",
+      "pairs": [
+        ["一", "one"],
+        ["二", "two"],
+        ["三", "three"],
+        ["五", "five"],
+        ["八", "eight"],
+        ["十", "ten"],
+        ["四", "four"],
+        ["六", "six"],
+        ["七", "seven"],
+        ["九", "nine"],
+        ["零", "zero"],
+        ["两", "two (counting)"],
+        ["百", "hundred"],
+        ["千", "thousand"],
+        ["半", "half"]
+      ]
+    },
+    {
+      "id": "family",
+      "name": "Family",
+      "pairs": [
+        ["妈妈", "mom"],
+        ["爸爸", "dad"],
+        ["哥哥", "older brother"],
+        ["姐姐", "older sister"],
+        ["弟弟", "younger brother"],
+        ["妹妹", "younger sister"],
+        ["爷爷", "grandpa"],
+        ["奶奶", "grandma"],
+        ["宝宝", "baby"],
+        ["家", "family"],
+        ["外公", "grandpa (maternal)"],
+        ["外婆", "grandma (maternal)"],
+        ["叔叔", "uncle"],
+        ["阿姨", "aunt"],
+        ["朋友", "friend"]
+      ]
+    }
+  ]
+}
