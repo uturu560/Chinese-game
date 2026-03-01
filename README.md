@@ -4,7 +4,7 @@ A kid-friendly matching game that connects Chinese words to their English meanin
 
 ## How to play
 
-1. Choose a word set (Animals, Colors, Numbers, or Family).
+1. Choose a word set (Animals, Colors, or Numbers).
 2. Click a card to flip it and see the word.
 3. Click another card. If it matches the first (Chinese–English pair), both stay face-up. If not, they flip back.
 4. Match all pairs to win. Use **Play again** to shuffle and try again.
