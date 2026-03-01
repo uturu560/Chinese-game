@@ -120,7 +120,7 @@
     { min: 5000, en: "Grandmaster General", zh: "至尊大师", badges: "🥉🥈🥇🎖️⚔️" }
   ];
 
-  const BG_MUSIC_SOURCES = ["music/bg1.mp3", "music/bg2.mp3", "music/bg3.mp3"];
+  const BG_MUSIC_SOURCES = ["bg1.mp3", "bg2.mp3", "bg3.mp3"];
   let bgMusicIndex = 0;
   let bgAudio = null;
   let bgMusicStarted = false;
