@@ -23,6 +23,10 @@
   const gameBoardWrap = document.querySelector(".game-board-wrap");
   const setSelect = document.getElementById("set-select");
   const levelSelect = document.getElementById("level-select");
+  const levelLabel = document.getElementById("level-label");
+  const levelSelectRow = document.getElementById("level-select-row");
+  const dailyLevelWrap = document.getElementById("daily-level-wrap");
+  const dailyLevelDisplay = document.getElementById("daily-level-display");
   const nextBtn = document.getElementById("next-btn");
   const winMessage = document.getElementById("win-message");
   const winNextBtn = document.getElementById("win-next-btn");
@@ -59,7 +63,11 @@
       doneForTodayShort: "Today's challenge complete!",
       switchToPractice: "Practice mode",
       backToStart: "Back to start",
-      partners: "Our partners"
+      partners: "Our partners",
+      sponsors: "Our sponsors",
+      thankYouSponsor: "Thank you for supporting us...",
+      yourStreak: "Your streak",
+      darkMode: "Dark mode"
     },
     zh: {
       title: "中英配词游戏",
@@ -85,7 +93,11 @@
       doneForTodayShort: "今日挑战完成！",
       switchToPractice: "练习模式",
       backToStart: "返回开始",
-      partners: "我们的合作伙伴"
+      partners: "我们的合作伙伴",
+      sponsors: "我们的赞助商",
+      thankYouSponsor: "感谢您的支持...",
+      yourStreak: "你的连续天数",
+      darkMode: "深色模式"
     }
   };
 
@@ -110,7 +122,13 @@
   const STORAGE_KEY_MODE = "matchingGameMode";
   const STORAGE_KEY_DAILY_PREFIX = "matchingGameDaily_";
   const STORAGE_KEY_LANG = "matchingGameLang";
-  const PARTNERS_EMOJI = "🤝 ";
+  const STORAGE_KEY_SPONSOR_DATE = "matchingGameSponsorClickDate";
+  const STORAGE_KEY_LAST_DAILY_DATE = "matchingGameLastDailyDate";
+  const STORAGE_KEY_STREAK = "matchingGameStreak";
+  const STORAGE_KEY_CELEBRATION_MILESTONES = "matchingGameCelebrationMilestones";
+  const STORAGE_KEY_THEME = "matchingGameTheme";
+  const CELEBRATION_MILESTONES = [1, 7, 30, 100, 200, 365, 500, 1000];
+  const STREAK_EMOJI = "🔥";
   const TITLE_TIERS = [
     { min: 0, en: "Learner", zh: "学者", badges: "" },
     { min: 100, en: "Bronze Learner", zh: "青铜学者", badges: "🥉" },
@@ -370,8 +388,64 @@
       const key = STORAGE_KEY_DAILY_PREFIX + getTodayKey();
       const n = getDailyCountToday() + 1;
       localStorage.setItem(key, String(Math.min(DAILY_CHALLENGE_LEVELS, n)));
+      updateStreakFromDailyPlay();
       return n;
     } catch (_) { return 0; }
+  }
+
+  function getYesterdayKey() {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function updateStreakFromDailyPlay() {
+    try {
+      const today = getTodayKey();
+      const yesterday = getYesterdayKey();
+      const lastDate = localStorage.getItem(STORAGE_KEY_LAST_DAILY_DATE);
+      const current = parseInt(localStorage.getItem(STORAGE_KEY_STREAK), 10) || 0;
+      let next = 1;
+      if (lastDate === today) next = current;
+      else if (lastDate === yesterday) next = current + 1;
+      localStorage.setItem(STORAGE_KEY_LAST_DAILY_DATE, today);
+      localStorage.setItem(STORAGE_KEY_STREAK, String(next));
+    } catch (_) {}
+  }
+
+  function getStreak() {
+    try {
+      const lastDate = localStorage.getItem(STORAGE_KEY_LAST_DAILY_DATE);
+      const today = getTodayKey();
+      const yesterday = getYesterdayKey();
+      if (lastDate !== today && lastDate !== yesterday) return 0;
+      return Math.max(0, parseInt(localStorage.getItem(STORAGE_KEY_STREAK), 10) || 0);
+    } catch (_) { return 0; }
+  }
+
+  function getCelebrationShownMilestones() {
+    try {
+      const s = localStorage.getItem(STORAGE_KEY_CELEBRATION_MILESTONES);
+      if (!s) return [];
+      const arr = JSON.parse(s);
+      return Array.isArray(arr) ? arr : [];
+    } catch (_) { return []; }
+  }
+
+  function setCelebrationShownForMilestone(streak) {
+    try {
+      const arr = getCelebrationShownMilestones();
+      if (arr.indexOf(streak) >= 0) return;
+      arr.push(streak);
+      arr.sort(function (a, b) { return a - b; });
+      localStorage.setItem(STORAGE_KEY_CELEBRATION_MILESTONES, JSON.stringify(arr));
+    } catch (_) {}
+  }
+
+  function shouldShowCelebrationOverlay() {
+    const streak = getStreak();
+    if (CELEBRATION_MILESTONES.indexOf(streak) < 0) return false;
+    return getCelebrationShownMilestones().indexOf(streak) < 0;
   }
 
   function getGameMode() {
@@ -398,6 +472,60 @@
     try {
       localStorage.setItem(STORAGE_KEY_LANG, lang === "zh" ? "zh" : "en");
     } catch (_) {}
+  }
+
+  function getSavedTheme() {
+    try {
+      const s = localStorage.getItem(STORAGE_KEY_THEME);
+      return s === "dark" ? "dark" : "light";
+    } catch (_) { return "light"; }
+  }
+
+  function setSavedTheme(theme) {
+    try {
+      localStorage.setItem(STORAGE_KEY_THEME, theme === "dark" ? "dark" : "light");
+    } catch (_) {}
+  }
+
+  function applyTheme(theme) {
+    const root = document.documentElement;
+    if (!root) return;
+    root.classList.remove("theme-light", "theme-dark");
+    root.classList.add(theme === "dark" ? "theme-dark" : "theme-light");
+    setSavedTheme(theme);
+    const toggle = document.getElementById("dark-mode-toggle");
+    if (toggle) {
+      toggle.classList.toggle("active", theme === "dark");
+      toggle.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+    }
+  }
+
+  function getSponsorClickedToday() {
+    try {
+      return localStorage.getItem(STORAGE_KEY_SPONSOR_DATE) === getTodayKey();
+    } catch (_) { return false; }
+  }
+
+  function setSponsorClickedToday() {
+    try {
+      localStorage.setItem(STORAGE_KEY_SPONSOR_DATE, getTodayKey());
+    } catch (_) {}
+  }
+
+  function updateSponsorButton() {
+    const el = document.getElementById("support-link");
+    if (!el) return;
+    const clicked = getSponsorClickedToday();
+    const lang = uiLang || "en";
+    if (clicked) {
+      el.classList.add("clicked");
+      el.textContent = (UI[lang] && UI[lang].thankYouSponsor) ? UI[lang].thankYouSponsor : "Thank you for supporting us...";
+      el.setAttribute("aria-label", el.textContent);
+    } else {
+      el.classList.remove("clicked");
+      el.textContent = (UI[lang] && UI[lang].sponsors) ? UI[lang].sponsors : "Our sponsors";
+      el.setAttribute("aria-label", el.textContent);
+    }
   }
 
   function isPracticeMode() {
@@ -446,6 +574,7 @@
   function updateDailyProgressDisplay() {
     const wrap = document.getElementById("daily-progress-wrap");
     const text = document.getElementById("daily-progress-text");
+    const streakEl = document.getElementById("streak-display");
     if (!wrap || !text) return;
     if (isPracticeMode()) {
       wrap.classList.add("hidden");
@@ -455,6 +584,14 @@
     const n = getDailyCountToday();
     const tpl = (UI[uiLang] && UI[uiLang].dailyProgress) ? UI[uiLang].dailyProgress : "Daily {n}/3";
     text.textContent = tpl.replace("{n}", String(n));
+    if (streakEl) {
+      const streak = getStreak();
+      const numEl = streakEl.querySelector(".streak-number");
+      const emojiEl = streakEl.querySelector(".streak-emoji");
+      if (numEl) numEl.textContent = streak;
+      if (emojiEl) emojiEl.textContent = STREAK_EMOJI;
+      streakEl.setAttribute("aria-label", (uiLang === "zh" ? "连续天数 " : "Streak ") + streak);
+    }
   }
 
   function updateModeSwitcherUI() {
@@ -516,6 +653,16 @@
       const opt = levelSelect.options[i];
       const val = parseInt(opt.value, 10);
       opt.disabled = val > maxSelectable;
+    }
+  }
+
+  function updateLevelControlVisibility() {
+    const isDaily = currentSet && currentSet.id === "daily" && !isPracticeMode();
+    if (levelLabel) levelLabel.classList.toggle("hidden", isDaily);
+    if (levelSelectRow) levelSelectRow.classList.toggle("hidden", isDaily);
+    if (dailyLevelWrap) {
+      dailyLevelWrap.classList.toggle("hidden", !isDaily);
+      if (isDaily && dailyLevelDisplay) dailyLevelDisplay.textContent = (currentLevel || 1) + " / 3";
     }
   }
 
@@ -714,9 +861,19 @@
           setLevelStars(currentSet.id, currentLevel, stars);
           updateLevelDropdown();
           playSound("win");
-          triggerConfetti();
           const dailyLimitReached = !isPracticeMode() && getDailyCountToday() >= DAILY_CHALLENGE_LEVELS;
-          showWin(elapsed, stars, dailyLimitReached);
+          if (dailyLimitReached) {
+            if (shouldShowCelebrationOverlay()) {
+              setCelebrationShownForMilestone(getStreak());
+              showDailyCompleteCelebration(function () { showWin(elapsed, stars, true); });
+            } else {
+              triggerConfetti();
+              showWin(elapsed, stars, true);
+            }
+          } else {
+            triggerConfetti();
+            showWin(elapsed, stars, false);
+          }
         }, 400);
       }
     } else {
@@ -729,6 +886,38 @@
         secondCard = null;
       }, 800);
     }
+  }
+
+  function showDailyCompleteCelebration(onDone) {
+    const overlay = document.getElementById("daily-complete-celebration");
+    const labelEl = document.getElementById("daily-complete-streak-label");
+    const numEl = document.querySelector(".daily-complete-num");
+    const emojiEl = document.querySelector(".daily-complete-emoji");
+    if (!overlay) {
+      if (onDone) onDone();
+      return;
+    }
+    const streak = getStreak();
+    const lang = uiLang || "en";
+    if (labelEl) labelEl.textContent = (UI[lang] && UI[lang].yourStreak) ? UI[lang].yourStreak : "Your streak";
+    if (numEl) numEl.textContent = streak;
+    if (emojiEl) emojiEl.textContent = STREAK_EMOJI;
+    overlay.classList.remove("hidden");
+    overlay.classList.add("visible");
+    const reveal = overlay.querySelector(".daily-complete-streak-reveal");
+    if (reveal) reveal.classList.remove("revealed");
+    triggerConfetti();
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (reveal) reveal.classList.add("revealed");
+      });
+    });
+    setTimeout(function () {
+      overlay.classList.remove("visible");
+      overlay.classList.add("hidden");
+      if (reveal) reveal.classList.remove("revealed");
+      if (onDone) onDone();
+    }, 1400);
   }
 
   function showWin(elapsedSeconds, stars, dailyLimitReached) {
@@ -781,6 +970,7 @@
     currentLevel = requested > maxSelectable ? maxSelectable : Math.max(1, Math.min(10, requested));
     if (currentLevel !== requested) levelSelect.value = currentLevel;
     saveSetAndLevel(set.id, currentLevel);
+    updateLevelControlVisibility();
     renderGame(set, currentLevel);
   }
 
@@ -793,7 +983,7 @@
     document.getElementById("instruction").textContent = UI[lang].instruction;
     document.getElementById("options-title").textContent = UI[lang].options;
     document.getElementById("set-label").textContent = UI[lang].chooseSet;
-    document.getElementById("level-label").textContent = UI[lang].level;
+    if (levelLabel) levelLabel.textContent = UI[lang].level;
     nextBtn.textContent = UI[lang].next;
     winText.textContent = UI[lang].youDidIt;
     winNextBtn.textContent = UI[lang].next;
@@ -802,11 +992,7 @@
     if (scoreLabel) scoreLabel.textContent = UI[lang].score + " ";
     const timeLabelEl = document.getElementById("time-label");
     if (timeLabelEl) timeLabelEl.textContent = UI[lang].time + " ";
-    const supportLinkEl = document.getElementById("support-link");
-    if (supportLinkEl) {
-      supportLinkEl.textContent = PARTNERS_EMOJI + (UI[lang].partners || "Our partners");
-      supportLinkEl.setAttribute("aria-label", supportLinkEl.textContent);
-    }
+    updateSponsorButton();
     updateModeSwitcherUI();
     updateDailyProgressDisplay();
     updateDailyLimitMessageText();
@@ -818,6 +1004,8 @@
     document.querySelectorAll(".btn-lang").forEach((btn) => {
       btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
     });
+    const darkModeBtn = document.getElementById("dark-mode-toggle");
+    if (darkModeBtn) darkModeBtn.textContent = UI[lang].darkMode;
   }
 
   function refreshSetSelector() {
@@ -1007,13 +1195,28 @@
   const supportLinkEl = document.getElementById("support-link");
   if (supportLinkEl) {
     supportLinkEl.addEventListener("click", function (e) {
+      if (getSponsorClickedToday()) {
+        e.preventDefault();
+        return;
+      }
       window.open(PARTNERS_URL, "_blank", "noopener,noreferrer");
+      setSponsorClickedToday();
+      updateSponsorButton();
       e.preventDefault();
     });
   }
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") updateSponsorButton();
+  });
 
   document.getElementById("lang-en").addEventListener("click", () => { applyLanguage("en"); startBgMusic(); });
   document.getElementById("lang-zh").addEventListener("click", () => { applyLanguage("zh"); startBgMusic(); });
+  const darkModeToggle = document.getElementById("dark-mode-toggle");
+  if (darkModeToggle) {
+    darkModeToggle.addEventListener("click", function () {
+      applyTheme(getSavedTheme() === "dark" ? "light" : "dark");
+    });
+  }
 
   loadSessionScore();
 
@@ -1057,5 +1260,7 @@
     uiLang = getSavedLang();
     initSelector();
     applyLanguage(uiLang);
+    applyTheme(getSavedTheme());
+    updateSponsorButton();
   });
 })();
