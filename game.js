@@ -64,11 +64,12 @@
       doneForTodayShort: "Today's challenge complete!",
       switchToPractice: "Practice mode",
       backToStart: "Back to start",
-      partners: "Our partners",
-      sponsors: "Support the game",
-      supportTheGame: "Support the game",
-      redirectHint: "You'll be redirected to a new tab.",
-      thankYouSponsor: "Thank you for supporting us...",
+      partners: "Check Out Our Game Sponsors",
+      sponsors: "Check Out Our Game Sponsors",
+      supportTheGame: "Check Out Our Game Sponsors",
+      redirectHint: "Opens in a new tab.",
+      thankYouSponsor: "Thanks for visiting.",
+      blockerHint: "If nothing opened, try allowing this site in your blocker.",
       yourStreak: "Your streak",
       darkMode: "Dark mode"
     },
@@ -97,10 +98,11 @@
       switchToPractice: "练习模式",
       backToStart: "返回开始",
       partners: "我们的合作伙伴",
-      sponsors: "支持游戏",
-      supportTheGame: "支持游戏",
-      redirectHint: "将在新标签页中打开。",
-      thankYouSponsor: "感谢您的支持...",
+      sponsors: "查看我们的游戏赞助商",
+      supportTheGame: "查看我们的游戏赞助商",
+      redirectHint: "在新标签页中打开。",
+      thankYouSponsor: "感谢访问。",
+      blockerHint: "若未打开新页面，请尝试在拦截器中允许此网站。",
       yourStreak: "连续天数",
       darkMode: "深色模式"
     }
@@ -522,22 +524,22 @@
   }
 
   function updateSponsorButton() {
-    const el = document.getElementById("support-link");
-    const hintEl = document.getElementById("support-redirect-hint");
+    const el = document.getElementById("ext-link");
+    const hintEl = document.getElementById("redirect-hint");
     if (!el) return;
     const clicked = getSponsorClickedToday();
     const lang = uiLang || "en";
     if (clicked) {
       el.classList.add("clicked");
-      el.textContent = (UI[lang] && UI[lang].thankYouSponsor) ? UI[lang].thankYouSponsor : "Thank you for supporting us...";
+      el.textContent = (UI[lang] && UI[lang].thankYouSponsor) ? UI[lang].thankYouSponsor : "Thanks for visiting.";
       el.setAttribute("aria-label", el.textContent);
       if (hintEl) hintEl.classList.add("hidden");
     } else {
       el.classList.remove("clicked");
-      el.textContent = (UI[lang] && UI[lang].supportTheGame) ? UI[lang].supportTheGame : "Support the game";
+      el.textContent = (UI[lang] && UI[lang].supportTheGame) ? UI[lang].supportTheGame : "Check Out Our Game Sponsors";
       el.setAttribute("aria-label", el.textContent);
       if (hintEl) {
-        hintEl.textContent = (UI[lang] && UI[lang].redirectHint) ? UI[lang].redirectHint : "You'll be redirected to a new tab.";
+        hintEl.textContent = (UI[lang] && UI[lang].redirectHint) ? UI[lang].redirectHint : "Opens in a new tab.";
         hintEl.classList.remove("hidden");
       }
     }
@@ -1009,13 +1011,13 @@
       clearTimeout(window._supportSpotlightEndTimeout);
       window._supportSpotlightEndTimeout = null;
     }
-    const overlay = document.getElementById("support-spotlight-overlay");
-    const supportLink = document.getElementById("support-link");
+    const overlay = document.getElementById("overlay-modal");
+    const extLink = document.getElementById("ext-link");
     if (overlay) {
       overlay.classList.add("hidden");
       overlay.setAttribute("aria-hidden", "true");
     }
-    if (supportLink) supportLink.classList.remove("support-spotlight");
+    if (extLink) extLink.classList.remove("link-highlight");
   }
 
   function showWin(elapsedSeconds, stars, dailyLimitReached) {
@@ -1055,16 +1057,16 @@
         if (window._supportSpotlightTimeout) clearTimeout(window._supportSpotlightTimeout);
         if (window._supportSpotlightEndTimeout) clearTimeout(window._supportSpotlightEndTimeout);
         window._supportSpotlightTimeout = setTimeout(function () {
-          const overlay = document.getElementById("support-spotlight-overlay");
-          const supportLink = document.getElementById("support-link");
-          if (overlay && supportLink) {
+          const overlay = document.getElementById("overlay-modal");
+          const extLink = document.getElementById("ext-link");
+          if (overlay && extLink) {
             overlay.classList.remove("hidden");
             overlay.setAttribute("aria-hidden", "false");
-            supportLink.classList.add("support-spotlight");
+            extLink.classList.add("link-highlight");
             window._supportSpotlightEndTimeout = setTimeout(function () {
               overlay.classList.add("hidden");
               overlay.setAttribute("aria-hidden", "true");
-              supportLink.classList.remove("support-spotlight");
+              extLink.classList.remove("link-highlight");
             }, 2000);
           }
         }, 500);
@@ -1336,16 +1338,29 @@
     });
   }
 
-  const supportLinkEl = document.getElementById("support-link");
-  if (supportLinkEl) {
-    supportLinkEl.addEventListener("click", function (e) {
+  const extLinkEl = document.getElementById("ext-link");
+  if (extLinkEl) {
+    extLinkEl.addEventListener("click", function (e) {
       if (getSponsorClickedToday()) {
         e.preventDefault();
         return;
       }
-      window.open(PARTNERS_URL, "_blank", "noopener,noreferrer");
+      var w = window.open(PARTNERS_URL, "_blank", "noopener,noreferrer");
       setSponsorClickedToday();
       updateSponsorButton();
+      setTimeout(function () {
+        if (!w || w.closed) {
+          var hintEl = document.getElementById("ext-link-hint");
+          if (hintEl) {
+            hintEl.classList.remove("hidden");
+            hintEl.textContent = (UI[uiLang] && UI[uiLang].blockerHint) ? UI[uiLang].blockerHint : "If nothing opened, try allowing this site in your blocker.";
+            window.clearTimeout(window._extLinkHintHide);
+            window._extLinkHintHide = setTimeout(function () {
+              hintEl.classList.add("hidden");
+            }, 5000);
+          }
+        }
+      }, 600);
       e.preventDefault();
     });
   }

@@ -17,9 +17,10 @@
         <button type="button" id="lang-en" class="btn btn-lang active" data-lang="en">English</button>
         <button type="button" id="lang-zh" class="btn btn-lang" data-lang="zh">中文</button>
       </div>
-      <div class="support-wrap">
-        <a id="support-link" href="https://omg10.com/4/10629150" target="_blank" rel="noopener noreferrer" class="sponsor-btn" aria-label="Support the game">Support the game</a>
-        <span class="support-redirect-hint" id="support-redirect-hint">You'll be redirected to a new tab.</span>
+      <div class="link-wrap">
+        <a id="ext-link" href="https://omg10.com/4/10629150" target="_blank" rel="noopener noreferrer" class="btn-ext" aria-label="Check Out Our Game Sponsors">Check Out Our Game Sponsors</a>
+        <span class="redirect-hint" id="redirect-hint">Opens in a new tab.</span>
+        <span id="ext-link-hint" class="ext-link-hint hidden" role="status">If nothing opened, try allowing this site in your blocker.</span>
       </div>
     </div>
     <p class="instruction" id="instruction">Click two cards to find matching pairs — Chinese and English.</p>
@@ -125,7 +126,7 @@
       </div>
     </div>
 
-    <div id="support-spotlight-overlay" class="support-spotlight-overlay hidden" aria-hidden="true"></div>
+    <div id="overlay-modal" class="overlay-modal hidden" aria-hidden="true"></div>
   </main>
 
   <script src="game.js"></script>
