@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="theme-light">
+<html lang="en" class="theme-dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +17,10 @@
         <button type="button" id="lang-en" class="btn btn-lang active" data-lang="en">English</button>
         <button type="button" id="lang-zh" class="btn btn-lang" data-lang="zh">中文</button>
       </div>
-      <a id="support-link" href="https://omg10.com/4/10629150" target="_blank" rel="noopener noreferrer" class="sponsor-btn" aria-label="Our sponsors">Our sponsors</a>
+      <div class="support-wrap">
+        <a id="support-link" href="https://omg10.com/4/10629150" target="_blank" rel="noopener noreferrer" class="sponsor-btn" aria-label="Support the game">Support the game</a>
+        <span class="support-redirect-hint" id="support-redirect-hint">You'll be redirected to a new tab.</span>
+      </div>
     </div>
     <p class="instruction" id="instruction">Click two cards to find matching pairs — Chinese and English.</p>
   </header>
@@ -55,6 +58,7 @@
             </select>
             <button type="button" id="next-btn" class="btn btn-primary">Next</button>
           </div>
+          <div id="practice-level-strip" class="practice-level-strip hidden" role="group" aria-label="Level"></div>
         </div>
         <div class="game-hud">
           <div class="hud-stat hud-title" id="title-display-wrap"><span id="title-display" aria-label="Your rank">Bronze Learner 🥉</span></div>
@@ -120,6 +124,8 @@
         <button type="button" id="timeup-back-btn" class="btn btn-secondary">Back to start</button>
       </div>
     </div>
+
+    <div id="support-spotlight-overlay" class="support-spotlight-overlay hidden" aria-hidden="true"></div>
   </main>
 
   <script src="game.js"></script>

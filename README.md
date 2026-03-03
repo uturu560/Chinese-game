@@ -1,12 +1,12 @@
-# Chinese & English Matching Game
+# French & English Matching Game
 
-A kid-friendly matching game that connects Chinese words to their English meanings. Click two cards to find matching pairs!
+A kid-friendly matching game that connects French words to their English meanings. Click two cards to find matching pairs!
 
 ## How to play
 
-1. Choose a word set (Animals, Colors, or Numbers).
+1. Choose a word set (Animals, Colors, Numbers, Family, or Verbs).
 2. Click a card to flip it and see the word.
-3. Click another card. If it matches the first (Chinese–English pair), both stay face-up. If not, they flip back.
+3. Click another card. If it matches the first (French–English pair), both stay face-up. If not, they flip back.
 4. Match all pairs to win. Use **Play again** to shuffle and try again.
 
 ## Run locally
@@ -35,7 +35,7 @@ npx serve .
 
 ## Add or edit word sets
 
-Edit `words.json`. Each set has an `id`, `name`, and `pairs` array of `[chinese, english]`:
+Edit `words.json`. Each set has an `id`, `name`, and `pairs` array of `[french, english]` (plus optional emoji):
 
 ```json
 {
@@ -43,7 +43,7 @@ Edit `words.json`. Each set has an `id`, `name`, and `pairs` array of `[chinese,
     {
       "id": "animals",
       "name": "Animals",
-      "pairs": [["狗", "dog"], ["猫", "cat"]]
+      "pairs": [["chien", "dog"], ["chat", "cat"]]
     }
   ]
 }

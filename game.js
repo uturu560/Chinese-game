@@ -25,6 +25,7 @@
   const levelSelect = document.getElementById("level-select");
   const levelLabel = document.getElementById("level-label");
   const levelSelectRow = document.getElementById("level-select-row");
+  const practiceLevelStrip = document.getElementById("practice-level-strip");
   const dailyLevelWrap = document.getElementById("daily-level-wrap");
   const dailyLevelDisplay = document.getElementById("daily-level-display");
   const nextBtn = document.getElementById("next-btn");
@@ -64,15 +65,17 @@
       switchToPractice: "Practice mode",
       backToStart: "Back to start",
       partners: "Our partners",
-      sponsors: "Our sponsors",
+      sponsors: "Support the game",
+      supportTheGame: "Support the game",
+      redirectHint: "You'll be redirected to a new tab.",
       thankYouSponsor: "Thank you for supporting us...",
       yourStreak: "Your streak",
       darkMode: "Dark mode"
     },
     zh: {
-      title: "中英配词游戏",
-      heading: "来配对词语！",
-      instruction: "点击两张卡片，找出中文和英文的配对。",
+      title: "中英词语配对游戏",
+      heading: "配对词语！",
+      instruction: "点击两张卡片找出配对 — 中文与英文。",
       options: "选项",
       chooseSet: "选择一组：",
       level: "级别：",
@@ -81,22 +84,24 @@
       backToStart: "返回开始",
       score: "得分：",
       time: "时间：",
-      youDidIt: "太棒了！做得好！",
-      progress: "级别 {level}/{maxLevel} · {pairs} 对",
+      youDidIt: "完成了！真棒！",
+      progress: "第 {level}/{maxLevel} 关 · {pairs} 对",
       loading: "加载中...",
       memorize: "记住卡片位置！",
       go: "开始！",
-      modeDaily: "每日（3关/天）",
+      modeDaily: "每日（3次/天）",
       modePractice: "练习（无限）",
       dailyProgress: "今日 {n}/3",
-      doneForToday: "今天的3关已完成！明天再来，或切换到练习模式。",
+      doneForToday: "今日 3 关已完成！明天再来或切换至练习模式。",
       doneForTodayShort: "今日挑战完成！",
       switchToPractice: "练习模式",
       backToStart: "返回开始",
       partners: "我们的合作伙伴",
-      sponsors: "我们的赞助商",
+      sponsors: "支持游戏",
+      supportTheGame: "支持游戏",
+      redirectHint: "将在新标签页中打开。",
       thankYouSponsor: "感谢您的支持...",
-      yourStreak: "你的连续天数",
+      yourStreak: "连续天数",
       darkMode: "深色模式"
     }
   };
@@ -119,23 +124,25 @@
   let previewCountdownInterval = null;
   const STARS_REQUIRED_TO_UNLOCK = 2;
   const DAILY_CHALLENGE_LEVELS = 3;
-  const STORAGE_KEY_MODE = "matchingGameMode";
-  const STORAGE_KEY_DAILY_PREFIX = "matchingGameDaily_";
-  const STORAGE_KEY_LANG = "matchingGameLang";
-  const STORAGE_KEY_SPONSOR_DATE = "matchingGameSponsorClickDate";
-  const STORAGE_KEY_LAST_DAILY_DATE = "matchingGameLastDailyDate";
-  const STORAGE_KEY_STREAK = "matchingGameStreak";
-  const STORAGE_KEY_CELEBRATION_MILESTONES = "matchingGameCelebrationMilestones";
-  const STORAGE_KEY_THEME = "matchingGameTheme";
+  /* Separate save namespace so this copy does not share data with other folders */
+  const STORAGE_PREFIX = "zhMatchWords_";
+  const STORAGE_KEY_MODE = STORAGE_PREFIX + "Mode";
+  const STORAGE_KEY_DAILY_PREFIX = STORAGE_PREFIX + "Daily_";
+  const STORAGE_KEY_LANG = STORAGE_PREFIX + "Lang";
+  const STORAGE_KEY_SPONSOR_DATE = STORAGE_PREFIX + "SponsorClickDate";
+  const STORAGE_KEY_LAST_DAILY_DATE = STORAGE_PREFIX + "LastDailyDate";
+  const STORAGE_KEY_STREAK = STORAGE_PREFIX + "Streak";
+  const STORAGE_KEY_CELEBRATION_MILESTONES = STORAGE_PREFIX + "CelebrationMilestones";
+  const STORAGE_KEY_THEME = STORAGE_PREFIX + "Theme";
   const CELEBRATION_MILESTONES = [1, 7, 30, 100, 200, 365, 500, 1000];
   const STREAK_EMOJI = "🔥";
   const TITLE_TIERS = [
-    { min: 0, en: "Learner", zh: "学者", badges: "" },
-    { min: 100, en: "Bronze Learner", zh: "青铜学者", badges: "🥉" },
-    { min: 500, en: "Silver Scholar", zh: "白银学者", badges: "🥉🥈" },
-    { min: 1000, en: "Gold Master", zh: "黄金大师", badges: "🥉🥈🥇" },
-    { min: 2000, en: "Language Major", zh: "语言专才", badges: "🥉🥈🥇🎖️" },
-    { min: 5000, en: "Grandmaster General", zh: "至尊大师", badges: "🥉🥈🥇🎖️⚔️" }
+    { min: 0, en: "Learner", zh: "学习者", badges: "" },
+    { min: 100, en: "Bronze Learner", zh: "铜牌学习者", badges: "🥉" },
+    { min: 500, en: "Silver Scholar", zh: "银牌学者", badges: "🥉🥈" },
+    { min: 1000, en: "Gold Master", zh: "金牌大师", badges: "🥉🥈🥇" },
+    { min: 2000, en: "Language Major", zh: "语言专家", badges: "🥉🥈🥇🎖️" },
+    { min: 5000, en: "Grandmaster General", zh: "全能大师", badges: "🥉🥈🥇🎖️⚔️" }
   ];
 
   const BG_MUSIC_SOURCES = ["bg1.mp3", "bg2.mp3", "bg3.mp3"];
@@ -246,6 +253,8 @@
     if (previewCountdownInterval) { clearInterval(previewCountdownInterval); previewCountdownInterval = null; }
     const overlay = gameBoardWrap && gameBoardWrap.querySelector(".preview-overlay");
     if (overlay) overlay.remove();
+    const optionsPanel = document.querySelector(".options-panel");
+    if (optionsPanel) optionsPanel.classList.remove("preview-active");
   }
 
   function startPlay() {
@@ -312,20 +321,20 @@
     if (scoreValue) scoreValue.textContent = sessionScore;
     updateTitleDisplay();
     try {
-      sessionStorage.setItem("matchingGameScore", String(sessionScore));
+      sessionStorage.setItem(STORAGE_PREFIX + "Score", String(sessionScore));
     } catch (_) {}
   }
 
   function loadSessionScore() {
     try {
-      const saved = sessionStorage.getItem("matchingGameScore");
+      const saved = sessionStorage.getItem(STORAGE_PREFIX + "Score");
       if (saved !== null) sessionScore = parseInt(saved, 10) || 0;
     } catch (_) {}
   }
 
   function getHighestLevelPassed(setId) {
     try {
-      const key = "matchingGameLevel_" + setId;
+      const key = STORAGE_PREFIX + "Level_" + setId;
       const s = localStorage.getItem(key);
       return s !== null ? Math.max(0, Math.min(10, parseInt(s, 10) || 0)) : 0;
     } catch (_) { return 0; }
@@ -333,7 +342,7 @@
 
   function setHighestLevelPassed(setId, level) {
     try {
-      const key = "matchingGameLevel_" + setId;
+      const key = STORAGE_PREFIX + "Level_" + setId;
       const prev = getHighestLevelPassed(setId);
       localStorage.setItem(key, String(Math.max(prev, level)));
     } catch (_) {}
@@ -341,7 +350,7 @@
 
   function getLevelStars(setId, level) {
     try {
-      const key = "matchingGameStars_" + setId + "_" + level;
+      const key = STORAGE_PREFIX + "Stars_" + setId + "_" + level;
       const s = localStorage.getItem(key);
       return s !== null ? Math.min(3, Math.max(0, parseInt(s, 10) || 0)) : 0;
     } catch (_) { return 0; }
@@ -349,7 +358,7 @@
 
   function setLevelStars(setId, level, stars) {
     try {
-      const key = "matchingGameStars_" + setId + "_" + level;
+      const key = STORAGE_PREFIX + "Stars_" + setId + "_" + level;
       const val = Math.min(3, Math.max(0, stars));
       localStorage.setItem(key, String(val));
     } catch (_) {}
@@ -357,16 +366,16 @@
 
   function getSavedSetAndLevel() {
     try {
-      const setId = localStorage.getItem("matchingGameCurrentSet");
-      const level = parseInt(localStorage.getItem("matchingGameCurrentLevel"), 10);
+      const setId = localStorage.getItem(STORAGE_PREFIX + "CurrentSet");
+      const level = parseInt(localStorage.getItem(STORAGE_PREFIX + "CurrentLevel"), 10);
       return { setId: setId || null, level: (level >= 1 && level <= 10) ? level : 1 };
     } catch (_) { return { setId: null, level: 1 }; }
   }
 
   function saveSetAndLevel(setId, level) {
     try {
-      localStorage.setItem("matchingGameCurrentSet", String(setId));
-      localStorage.setItem("matchingGameCurrentLevel", String(level));
+      localStorage.setItem(STORAGE_PREFIX + "CurrentSet", String(setId));
+      localStorage.setItem(STORAGE_PREFIX + "CurrentLevel", String(level));
     } catch (_) {}
   }
 
@@ -477,8 +486,8 @@
   function getSavedTheme() {
     try {
       const s = localStorage.getItem(STORAGE_KEY_THEME);
-      return s === "dark" ? "dark" : "light";
-    } catch (_) { return "light"; }
+      return s === "light" ? "light" : "dark";
+    } catch (_) { return "dark"; }
   }
 
   function setSavedTheme(theme) {
@@ -514,6 +523,7 @@
 
   function updateSponsorButton() {
     const el = document.getElementById("support-link");
+    const hintEl = document.getElementById("support-redirect-hint");
     if (!el) return;
     const clicked = getSponsorClickedToday();
     const lang = uiLang || "en";
@@ -521,10 +531,15 @@
       el.classList.add("clicked");
       el.textContent = (UI[lang] && UI[lang].thankYouSponsor) ? UI[lang].thankYouSponsor : "Thank you for supporting us...";
       el.setAttribute("aria-label", el.textContent);
+      if (hintEl) hintEl.classList.add("hidden");
     } else {
       el.classList.remove("clicked");
-      el.textContent = (UI[lang] && UI[lang].sponsors) ? UI[lang].sponsors : "Our sponsors";
+      el.textContent = (UI[lang] && UI[lang].supportTheGame) ? UI[lang].supportTheGame : "Support the game";
       el.setAttribute("aria-label", el.textContent);
+      if (hintEl) {
+        hintEl.textContent = (UI[lang] && UI[lang].redirectHint) ? UI[lang].redirectHint : "You'll be redirected to a new tab.";
+        hintEl.classList.remove("hidden");
+      }
     }
   }
 
@@ -547,7 +562,12 @@
   function getTodayDailyStartIndex() {
     if (!dailyWords || dailyWords.length < 18) return 0;
     const numBlocks = Math.floor(dailyWords.length / 18);
-    const blockIndex = getDayOfYear() % Math.max(1, numBlocks);
+    const todayKey = getTodayKey();
+    let seed = 0;
+    for (let i = 0; i < todayKey.length; i++) {
+      seed = ((seed << 5) - seed + todayKey.charCodeAt(i)) | 0;
+    }
+    const blockIndex = Math.abs(seed) % Math.max(1, numBlocks);
     return blockIndex * 18;
   }
 
@@ -562,6 +582,8 @@
     if (el) el.classList.remove("hidden");
     const gameAreaEl = document.getElementById("game-area");
     if (gameAreaEl) gameAreaEl.classList.add("hidden");
+    const optionsPanel = document.querySelector(".options-panel");
+    if (optionsPanel) optionsPanel.classList.add("daily-complete-view");
   }
 
   function hideDailyLimitMessage() {
@@ -569,6 +591,8 @@
     if (el) el.classList.add("hidden");
     const gameAreaEl = document.getElementById("game-area");
     if (gameAreaEl) gameAreaEl.classList.remove("hidden");
+    const optionsPanel = document.querySelector(".options-panel");
+    if (optionsPanel) optionsPanel.classList.remove("daily-complete-view");
   }
 
   function updateDailyProgressDisplay() {
@@ -596,9 +620,10 @@
 
   function updateModeSwitcherUI() {
     const mode = getGameMode();
-    document.querySelectorAll(".btn-mode").forEach((btn) => {
-      btn.classList.toggle("active", btn.getAttribute("data-mode") === mode);
-      const label = btn.getAttribute("data-mode") === "daily" ? (UI[uiLang].modeDaily || "Daily (3/day)") : (UI[uiLang].modePractice || "Practice (unlimited)");
+    document.querySelectorAll(".btn-mode[data-mode]").forEach((btn) => {
+      const dataMode = btn.getAttribute("data-mode");
+      btn.classList.toggle("active", dataMode === mode);
+      const label = dataMode === "daily" ? (UI[uiLang].modeDaily || "Daily (3/day)") : (UI[uiLang].modePractice || "Practice (unlimited)");
       btn.textContent = label;
     });
   }
@@ -626,7 +651,7 @@
   }
 
   function triggerConfetti() {
-    const colors = ["#6b4ce6", "#22c55e", "#fbbf24", "#f97316", "#ec4899", "#8b5cf6"];
+    const colors = ["#2563eb", "#3b82f6", "#60a5fa", "#22c55e", "#fbbf24", "#0ea5e9"];
     const container = document.createElement("div");
     container.className = "confetti-container";
     container.setAttribute("aria-hidden", "true");
@@ -660,10 +685,51 @@
     const isDaily = currentSet && currentSet.id === "daily" && !isPracticeMode();
     if (levelLabel) levelLabel.classList.toggle("hidden", isDaily);
     if (levelSelectRow) levelSelectRow.classList.toggle("hidden", isDaily);
+    if (practiceLevelStrip) practiceLevelStrip.classList.toggle("hidden", isDaily);
     if (dailyLevelWrap) {
       dailyLevelWrap.classList.toggle("hidden", !isDaily);
       if (isDaily && dailyLevelDisplay) dailyLevelDisplay.textContent = (currentLevel || 1) + " / 3";
     }
+    if (!isDaily && practiceLevelStrip) updatePracticeLevelStrip();
+  }
+
+  function buildPracticeLevelStrip() {
+    if (!practiceLevelStrip) return;
+    practiceLevelStrip.innerHTML = "";
+    const maxLevel = 10;
+    for (let n = 1; n <= maxLevel; n++) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "practice-level-btn";
+      btn.setAttribute("aria-label", "Level " + n);
+      btn.dataset.level = String(n);
+      btn.textContent = n;
+      btn.addEventListener("click", () => {
+        const level = parseInt(btn.dataset.level, 10);
+        const set = currentSet && currentSet.id !== "daily" ? currentSet : (wordSets[0] || null);
+        if (!set) return;
+        const maxUnlocked = getMaxUnlockedLevel(set.id);
+        if (level > maxUnlocked) return;
+        levelSelect.value = String(level);
+        currentLevel = level;
+        startSet(set.id);
+      });
+      practiceLevelStrip.appendChild(btn);
+    }
+  }
+
+  function updatePracticeLevelStrip() {
+    if (!practiceLevelStrip || !currentSet || currentSet.id === "daily") return;
+    const maxUnlocked = getMaxUnlockedLevel(currentSet.id);
+    const maxLevel = getMaxLevel(currentSet);
+    const buttons = practiceLevelStrip.querySelectorAll(".practice-level-btn");
+    buttons.forEach((btn) => {
+      const level = parseInt(btn.dataset.level, 10);
+      const unlocked = level <= maxUnlocked && level <= maxLevel;
+      btn.disabled = !unlocked;
+      btn.classList.toggle("current", level === currentLevel);
+      btn.setAttribute("aria-current", level === currentLevel ? "true" : "false");
+    });
   }
 
   function shuffle(array) {
@@ -745,19 +811,29 @@
     const timeupBack = document.getElementById("timeup-back-btn");
     const timeupHint = document.querySelector(".timeup-hint");
     if (timeupText) timeupText.textContent = uiLang === "zh" ? "时间到！" : "Time's up!";
-    if (timeupHint) timeupHint.textContent = uiLang === "zh" ? "再试一次，在时间用完前配对成功吧！" : "Try again and match all pairs before the timer runs out!";
-    if (timeupRetry) timeupRetry.textContent = uiLang === "zh" ? "再试一次" : "Retry";
+    if (timeupHint) timeupHint.textContent = uiLang === "zh" ? "再试一次，在时间结束前配对全部卡片！" : "Try again and match all pairs before the timer runs out!";
+    if (timeupRetry) timeupRetry.textContent = uiLang === "zh" ? "重试" : "Retry";
     if (timeupBack) timeupBack.textContent = UI[uiLang].backToStart || UI.en.backToStart;
     if (timeupMessage) timeupMessage.classList.remove("hidden");
   }
 
+  function updateOptionsPanelPracticeView() {
+    const optionsPanel = document.querySelector(".options-panel");
+    if (!optionsPanel) return;
+    if (isPracticeMode()) optionsPanel.classList.add("practice-mode-view");
+    else optionsPanel.classList.remove("practice-mode-view");
+  }
+
   function renderGame(set, level) {
     gameArea.innerHTML = "";
+    clearSupportSpotlight();
     winMessage.classList.add("hidden");
     const timeupMessage = document.getElementById("timeup-message");
     if (timeupMessage) timeupMessage.classList.add("hidden");
     stopTimer();
     clearPreview();
+    const optionsPanel = document.querySelector(".options-panel");
+    if (optionsPanel) optionsPanel.classList.remove("round-complete");
     roundScore = 0;
     currentLevelCompleted = false;
     matchStreak = 0;
@@ -776,6 +852,7 @@
 
     const memorizeText = UI[uiLang].memorize || UI.en.memorize;
     const goText = UI[uiLang].go || UI.en.go;
+    if (optionsPanel) optionsPanel.classList.add("preview-active");
     const overlay = document.createElement("div");
     overlay.className = "preview-overlay";
     overlay.setAttribute("aria-live", "polite");
@@ -802,6 +879,7 @@
     previewTimeoutId = setTimeout(function () {
       previewTimeoutId = null;
       if (previewCountdownInterval) { clearInterval(previewCountdownInterval); previewCountdownInterval = null; }
+      if (optionsPanel) optionsPanel.classList.remove("preview-active");
       overlay.remove();
       startPlay();
     }, PREVIEW_SECONDS * 1000);
@@ -861,6 +939,8 @@
           setLevelStars(currentSet.id, currentLevel, stars);
           updateLevelDropdown();
           playSound("win");
+          const optionsPanel = document.querySelector(".options-panel");
+          if (optionsPanel) optionsPanel.classList.add("round-complete");
           const dailyLimitReached = !isPracticeMode() && getDailyCountToday() >= DAILY_CHALLENGE_LEVELS;
           if (dailyLimitReached) {
             if (shouldShowCelebrationOverlay()) {
@@ -920,6 +1000,24 @@
     }, 1400);
   }
 
+  function clearSupportSpotlight() {
+    if (window._supportSpotlightTimeout) {
+      clearTimeout(window._supportSpotlightTimeout);
+      window._supportSpotlightTimeout = null;
+    }
+    if (window._supportSpotlightEndTimeout) {
+      clearTimeout(window._supportSpotlightEndTimeout);
+      window._supportSpotlightEndTimeout = null;
+    }
+    const overlay = document.getElementById("support-spotlight-overlay");
+    const supportLink = document.getElementById("support-link");
+    if (overlay) {
+      overlay.classList.add("hidden");
+      overlay.setAttribute("aria-hidden", "true");
+    }
+    if (supportLink) supportLink.classList.remove("support-spotlight");
+  }
+
   function showWin(elapsedSeconds, stars, dailyLimitReached) {
     document.getElementById("win-score-value").textContent = roundScore;
     const remaining = Math.max(0, ROUND_TIME_SECONDS - (elapsedSeconds || 0));
@@ -950,6 +1048,28 @@
       if (winPracticeBtnEl) winPracticeBtnEl.classList.add("hidden");
     }
     winMessage.classList.remove("hidden");
+    if (dailyLimitReached) {
+      const streak = getStreak();
+      const showSpotlight = streak === 1 || (streak >= 7 && streak % 7 === 0);
+      if (showSpotlight) {
+        if (window._supportSpotlightTimeout) clearTimeout(window._supportSpotlightTimeout);
+        if (window._supportSpotlightEndTimeout) clearTimeout(window._supportSpotlightEndTimeout);
+        window._supportSpotlightTimeout = setTimeout(function () {
+          const overlay = document.getElementById("support-spotlight-overlay");
+          const supportLink = document.getElementById("support-link");
+          if (overlay && supportLink) {
+            overlay.classList.remove("hidden");
+            overlay.setAttribute("aria-hidden", "false");
+            supportLink.classList.add("support-spotlight");
+            window._supportSpotlightEndTimeout = setTimeout(function () {
+              overlay.classList.add("hidden");
+              overlay.setAttribute("aria-hidden", "true");
+              supportLink.classList.remove("support-spotlight");
+            }, 2000);
+          }
+        }, 500);
+      }
+    }
   }
 
   function startSet(setId) {
@@ -996,6 +1116,7 @@
     updateModeSwitcherUI();
     updateDailyProgressDisplay();
     updateDailyLimitMessageText();
+    updateOptionsPanelPracticeView();
     const savedSet = setSelect.value;
     refreshSetSelector();
     if (setSelect.querySelector('option[value="' + savedSet + '"]')) setSelect.value = savedSet;
@@ -1026,8 +1147,13 @@
   }
 
   function initSelector() {
+    if (getDailyCountToday() < DAILY_CHALLENGE_LEVELS) {
+      setGameMode("daily");
+    }
     updateModeSwitcherUI();
+    updateOptionsPanelPracticeView();
     refreshSetSelector();
+    buildPracticeLevelStrip();
     updateLevelDropdown();
     if (isPracticeMode()) {
       if (wordSets.length > 0) {
@@ -1056,6 +1182,7 @@
 
   function goToNextLevel() {
     if (!currentSet || !currentLevelCompleted) return;
+    clearSupportSpotlight();
     winMessage.classList.add("hidden");
     updateLevelDropdown();
     const maxLevelThisSet = getMaxLevel(currentSet);
@@ -1086,11 +1213,13 @@
 
   winReplayBtn.addEventListener("click", () => {
     if (!currentSet) return;
+    clearSupportSpotlight();
     winMessage.classList.add("hidden");
     renderGame(currentSet, currentLevel);
   });
 
   winBackBtn.addEventListener("click", () => {
+    clearSupportSpotlight();
     winMessage.classList.add("hidden");
     levelSelect.value = "1";
     currentLevel = 1;
@@ -1136,6 +1265,7 @@
   document.getElementById("mode-daily").addEventListener("click", () => {
     setGameMode("daily");
     updateModeSwitcherUI();
+    updateOptionsPanelPracticeView();
     updateDailyProgressDisplay();
     refreshSetSelector();
     setSelect.value = "daily";
@@ -1146,14 +1276,16 @@
   document.getElementById("mode-practice").addEventListener("click", () => {
     setGameMode("practice");
     updateModeSwitcherUI();
+    updateOptionsPanelPracticeView();
     updateDailyProgressDisplay();
     hideDailyLimitMessage();
     refreshSetSelector();
-    const setId = wordSets.length > 0 ? wordSets[0].id : setSelect.value;
-    setSelect.value = setId;
+    let setId = wordSets.length > 0 ? wordSets[0].id : setSelect.value;
+    if (setId === "daily") setId = wordSets.length > 0 ? wordSets[0].id : null;
+    setSelect.value = setId || "";
     levelSelect.value = "1";
     currentLevel = 1;
-    startSet(setId);
+    if (setId) startSet(setId);
   });
 
   const dailyLimitPracticeBtn = document.getElementById("daily-limit-practice-btn");
@@ -1162,14 +1294,16 @@
     dailyLimitPracticeBtn.addEventListener("click", () => {
       setGameMode("practice");
       updateModeSwitcherUI();
+      updateOptionsPanelPracticeView();
       updateDailyProgressDisplay();
       hideDailyLimitMessage();
       refreshSetSelector();
-      const setId = wordSets.length > 0 ? wordSets[0].id : setSelect.value;
-      setSelect.value = setId;
+      let setId = wordSets.length > 0 ? wordSets[0].id : setSelect.value;
+      if (setId === "daily") setId = wordSets.length > 0 ? wordSets[0].id : null;
+      setSelect.value = setId || "";
       levelSelect.value = "1";
       currentLevel = 1;
-      startSet(setId);
+      if (setId) startSet(setId);
     });
   }
   if (dailyLimitBackBtn) {
@@ -1186,9 +1320,19 @@
     winPracticeBtn.addEventListener("click", () => {
       setGameMode("practice");
       updateModeSwitcherUI();
+      updateOptionsPanelPracticeView();
       updateDailyProgressDisplay();
-      winMessage.classList.add("hidden");
-      goToNextLevel();
+      clearSupportSpotlight();
+    winMessage.classList.add("hidden");
+      hideDailyLimitMessage();
+      refreshSetSelector();
+      const setId = wordSets.length > 0 ? wordSets[0].id : null;
+      if (setId) {
+        setSelect.value = setId;
+        levelSelect.value = "1";
+        currentLevel = 1;
+        startSet(setId);
+      }
     });
   }
 
@@ -1222,22 +1366,22 @@
 
   const builtinSets = { sets: (function () {
     try {
-      return JSON.parse('{"sets":[{"id":"animals","name":"Animals","pairs":[["狗","dog","🐶"],["猫","cat","🐱"],["鸟","bird","🐦"],["鱼","fish","🐟"],["兔","rabbit","🐰"],["马","horse","🐴"],["牛","cow","🐄"],["羊","sheep","🐑"],["猪","pig","🐷"],["鸡","chicken","🐔"],["鸭","duck","🦆"],["鼠","mouse","🐭"],["虎","tiger","🐯"],["龙","dragon","🐉"],["蛇","snake","🐍"],["猴","monkey","🐵"],["熊","bear","🐻"],["狼","wolf","🐺"],["象","elephant","🐘"],["鹿","deer","🦌"],["狐狸","fox","🦊"],["熊猫","panda","🐼"],["狮子","lion","🦁"],["蜜蜂","bee","🐝"],["蝴蝶","butterfly","🦋"],["蚂蚁","ant","🐜"],["蜘蛛","spider","🕷️"],["螃蟹","crab","🦀"],["青蛙","frog","🐸"],["乌龟","turtle","🐢"],["鳄鱼","crocodile","🐊"],["企鹅","penguin","🐧"],["猫头鹰","owl","🦉"],["蝙蝠","bat","🦇"],["刺猬","hedgehog","🦔"],["袋鼠","kangaroo","🦘"],["考拉","koala","🐨"],["长颈鹿","giraffe","🦒"],["斑马","zebra","🦓"],["河马","hippo","🦛"],["犀牛","rhino","🦏"],["猩猩","orangutan","🦧"],["松鼠","squirrel","🐿️"],["海豚","dolphin","🐬"],["鲸鱼","whale","🐋"],["鲨鱼","shark","🦈"],["海星","starfish","⭐"],["章鱼","octopus","🐙"],["蜗牛","snail","🐌"],["蚯蚓","earthworm","🪱"],["瓢虫","ladybug","🐞"],["蜻蜓","dragonfly","🦋"],["蟋蟀","cricket","🦗"],["萤火虫","firefly","✨"]]},{"id":"colors","name":"Colors","pairs":[["红","red","🔴"],["蓝","blue","🔵"],["黄","yellow","🟡"],["绿","green","🟢"],["黑","black","⚫"],["白","white","⚪"],["橙","orange","🟠"],["紫","purple","🟣"],["粉","pink","🌸"],["棕","brown","🟤"],["灰","grey","◻️"],["金","gold","✨"],["银","silver","⚪"],["青","cyan","💎"],["米","beige","🍚"],["深蓝","dark blue","🔵"],["浅绿","light green","🟢"],["深红","dark red","🔴"],["天蓝","sky blue","🔵"],["柠檬黄","lemon yellow","🟡"],["橄榄绿","olive green","🟢"],["玫瑰红","rose red","🔴"],["海军蓝","navy blue","🔵"],["薄荷绿","mint green","🟢"],["桃色","peach","🍑"],["薰衣草","lavender","🟣"],["珊瑚色","coral","🪸"],["靛蓝","indigo","🟣"],["茶色","tan","🟤"],["奶油色","cream","🥛"],["栗色","maroon","🔴"],["青柠","lime","🟢"],["琥珀","amber","🟡"],["翡翠","emerald","💎"],["朱红","vermilion","🔴"],["藏青","navy","🔵"],["象牙白","ivory","⚪"],["炭灰","charcoal","◻️"],["赤褐","auburn","🟤"],["品红","magenta","🟣"],["青绿","teal","🟢"],["杏黄","apricot","🟡"],["猩红","scarlet","🔴"],["钴蓝","cobalt blue","🔵"],["橄榄","olive","🟢"],["紫罗兰","violet","🟣"],["米黄","wheat","🟡"],["石板灰","slate grey","◻️"]]},{"id":"numbers","name":"Numbers","pairs":[["一","one","1️⃣"],["二","two","2️⃣"],["三","three","3️⃣"],["四","four","4️⃣"],["五","five","5️⃣"],["六","six","6️⃣"],["七","seven","7️⃣"],["八","eight","8️⃣"],["九","nine","9️⃣"],["十","ten","🔟"],["零","zero","0️⃣"],["百","hundred","💯"],["千","thousand","🔢"],["半","half","➗"],["两","two (counting)","2️⃣"],["第一","first","1️⃣"],["第二","second","2️⃣"],["第三","third","3️⃣"],["几","how many","❓"],["多","many","📦"],["少","few","📉"],["双","pair","2️⃣"],["打","dozen","1️⃣2️⃣"],["倍","times","✖️"],["加","plus","➕"],["减","minus","➖"],["乘","multiply","✖️"],["除","divide","➗"],["等于","equals","🟰"],["数字","number","🔢"],["奇数","odd number","1️⃣"],["偶数","even number","2️⃣"],["分数","fraction","½"],["小数","decimal","1.5"],["百分","percent","%"],["倍率","multiple","✖️"],["数量","quantity","📊"],["顺序","order","1️⃣2️⃣3️⃣"],["倒数","countdown","⏱️"],["整数","whole number","🔢"],["双数","double","2️⃣"],["单数","single","1️⃣"],["十几","teens","1️⃣🔟"],["几十","tens","🔟"],["零头","odd","🔢"],["整","whole","1️⃣"],["余","remainder","➗"],["约","approximately","≈"]]},{"id":"family","name":"Family","pairs":[["妈妈","mom","👩"],["爸爸","dad","👨"],["哥哥","older brother","👦"],["姐姐","older sister","👧"],["弟弟","younger brother","👦"],["妹妹","younger sister","👧"],["爷爷","grandpa","👴"],["奶奶","grandma","👵"],["宝宝","baby","👶"],["家","family","🏠"],["外公","grandpa (maternal)","👴"],["外婆","grandma (maternal)","👵"],["叔叔","uncle","👨"],["阿姨","aunt","👩"],["朋友","friend","👫"],["儿子","son","👦"],["女儿","daughter","👧"],["丈夫","husband","👨"],["妻子","wife","👩"],["父母","parents","👨👩"],["兄弟","brothers","👦👦"],["姐妹","sisters","👧👧"],["祖父母","grandparents","👴👵"],["孙子","grandson","👦"],["孙女","granddaughter","👧"],["表哥","male cousin","👦"],["表姐","female cousin","👧"],["侄子","nephew","👦"],["侄女","niece","👧"],["堂兄","cousin (paternal)","👦"],["亲戚","relatives","👨👩"],["邻居","neighbor","🏠"],["同学","classmate","📚"],["老师","teacher","👩‍🏫"],["学生","student","📖"],["大人","adult","👨"],["小孩","child","👶"],["男人","man","👨"],["女人","woman","👩"],["男孩","boy","👦"],["女孩","girl","👧"],["双胞胎","twins","👫"],["新郎","groom","👨"],["新娘","bride","👩"],["继父","stepfather","👨"],["继母","stepmother","👩"],["养子","adopted son","👦"],["家人","family members","👨👩👧👦"]]},{"id":"verbs","name":"Verbs","pairs":[["跑","run","🏃"],["走","walk","🚶"],["吃","eat","🍽️"],["喝","drink","🥤"],["睡","sleep","😴"],["看","see","👀"],["听","listen","👂"],["说","say","🗣️"],["读","read","📖"],["写","write","✍️"],["唱","sing","🎤"],["玩","play","🎮"],["学习","study","📚"],["工作","work","💼"],["爱","love","❤️"],["喜欢","like","👍"],["想","think","🤔"],["来","come","👉"],["去","go","👋"],["买","buy","🛒"],["打开","open","📂"],["关闭","close","❌"],["问","ask","❓"],["帮助","help","🆘"],["给","give","🎁"],["拿","take","✋"],["放","put","📍"],["坐","sit","🪑"],["站","stand","🧍"],["飞","fly","✈️"],["游","swim","🏊"],["爬","climb","🧗"],["跳","jump","⬆️"],["等","wait","⏳"],["教","teach","👩‍🏫"],["学","learn","📖"],["开始","start","▶️"],["结束","finish","🏁"],["忘记","forget","🤷"],["记得","remember","🧠"],["尝试","try","💪"],["需要","need","📌"],["想要","want","🙏"],["做","do","✅"],["找","find","🔍"],["用","use","🔧"],["叫","call","📞"],["回答","answer","💬"],["笑","laugh","😄"],["哭","cry","😢"],["画","draw","🖌️"],["跳舞","dance","💃"],["做饭","cook","👨‍🍳"],["洗","wash","🧼"]]}]}').sets;
+      return JSON.parse('{"sets":[{"id":"animals","name":"Animals","pairs":[["狗","dog","🐶"],["猫","cat","🐱"],["鸟","bird","🐦"],["鱼","fish","🐟"],["兔子","rabbit","🐰"],["马","horse","🐴"],["牛","cow","🐄"],["羊","sheep","🐑"],["猪","pig","🐷"],["鸡","chicken","🐔"],["鸭子","duck","🦆"],["老鼠","mouse","🐭"],["老虎","tiger","🐯"],["龙","dragon","🐉"],["蛇","snake","🐍"],["猴子","monkey","🐵"],["熊","bear","🐻"],["狼","wolf","🐺"],["大象","elephant","🐘"],["鹿","deer","🦌"],["狐狸","fox","🦊"],["熊猫","panda","🐼"],["狮子","lion","🦁"],["蜜蜂","bee","🐝"],["蝴蝶","butterfly","🦋"],["蚂蚁","ant","🐜"],["蜘蛛","spider","🕷️"],["螃蟹","crab","🦀"],["青蛙","frog","🐸"],["乌龟","turtle","🐢"],["鳄鱼","crocodile","🐊"],["企鹅","penguin","🐧"],["猫头鹰","owl","🦉"],["蝙蝠","bat","🦇"],["刺猬","hedgehog","🦔"],["袋鼠","kangaroo","🦘"],["考拉","koala","🐨"],["长颈鹿","giraffe","🦒"],["斑马","zebra","🦓"],["河马","hippo","🦛"],["犀牛","rhino","🦏"],["猩猩","orangutan","🦧"],["松鼠","squirrel","🐿️"],["海豚","dolphin","🐬"],["鲸鱼","whale","🐋"],["鲨鱼","shark","🦈"],["海星","starfish","⭐"],["章鱼","octopus","🐙"],["蜗牛","snail","🐌"],["蚯蚓","earthworm","🪱"],["瓢虫","ladybug","🐞"],["蜻蜓","dragonfly","🦋"],["蟋蟀","cricket","🦗"],["萤火虫","firefly","✨"]]},{"id":"colors","name":"Colors","pairs":[["红色","red","🔴"],["蓝色","blue","🔵"],["黄色","yellow","🟡"],["绿色","green","🟢"],["黑色","black","⚫"],["白色","white","⚪"],["橙色","orange","🟠"],["紫色","purple","🟣"],["粉色","pink","🌸"],["棕色","brown","🟤"],["灰色","grey","◻️"],["金色","gold","✨"],["银色","silver","⚪"],["青色","cyan","💎"],["米色","beige","🍚"],["深蓝","dark blue","🔵"],["浅绿","light green","🟢"],["深红","dark red","🔴"],["天蓝","sky blue","🔵"],["柠檬黄","lemon yellow","🟡"],["橄榄绿","olive green","🟢"],["玫瑰红","rose red","🔴"],["藏青","navy blue","🔵"],["薄荷绿","mint green","🟢"],["桃色","peach","🍑"],["薰衣草","lavender","🟣"],["珊瑚色","coral","🪸"],["靛蓝","indigo","🟣"],["茶色","tan","🟤"],["奶油色","cream","🥛"],["栗色","maroon","🔴"],["青柠","lime","🟢"],["琥珀色","amber","🟡"],["翡翠绿","emerald","💎"],["朱红","vermilion","🔴"],["海军蓝","navy","🔵"],["象牙白","ivory","⚪"],["炭灰","charcoal","◻️"],["赤褐","auburn","🟤"],["品红","magenta","🟣"],["青绿","teal","🟢"],["杏色","apricot","🟡"],["猩红","scarlet","🔴"],["钴蓝","cobalt blue","🔵"],["橄榄","olive","🟢"],["紫罗兰","violet","🟣"],["麦色","wheat","🟡"],["石板灰","slate grey","◻️"]]},{"id":"numbers","name":"Numbers","pairs":[["一","one","1️⃣"],["二","two","2️⃣"],["三","three","3️⃣"],["四","four","4️⃣"],["五","five","5️⃣"],["六","six","6️⃣"],["七","seven","7️⃣"],["八","eight","8️⃣"],["九","nine","9️⃣"],["十","ten","🔟"],["零","zero","0️⃣"],["百","hundred","💯"],["千","thousand","🔢"],["半","half","➗"],["两","two (counting)","2️⃣"],["第一","first","1️⃣"],["第二","second","2️⃣"],["第三","third","3️⃣"],["多少","how many","❓"],["很多","many","📦"],["少","few","📉"],["对","pair","2️⃣"],["打","dozen","1️⃣2️⃣"],["倍","times","✖️"],["加","plus","➕"],["减","minus","➖"],["乘","multiply","✖️"],["除","divide","➗"],["等于","equals","🟰"],["数字","number","🔢"],["奇数","odd number","1️⃣"],["偶数","even number","2️⃣"],["分数","fraction","½"],["小数","decimal","1.5"],["百分","percent","%"],["倍数","multiple","✖️"],["数量","quantity","📊"],["顺序","order","1️⃣2️⃣3️⃣"],["倒计时","countdown","⏱️"],["整数","whole number","🔢"],["双","double","2️⃣"],["单","single","1️⃣"],["十几","teens","1️⃣🔟"],["十位","tens","🔟"],["余数","odd","🔢"],["整体","whole","1️⃣"],["余数","remainder","➗"],["大约","approximately","≈"]]},{"id":"family","name":"Family","pairs":[["妈妈","mom","👩"],["爸爸","dad","👨"],["哥哥","older brother","👦"],["姐姐","older sister","👧"],["弟弟","younger brother","👦"],["妹妹","younger sister","👧"],["爷爷","grandpa","👴"],["奶奶","grandma","👵"],["宝宝","baby","👶"],["家庭","family","🏠"],["外公","grandpa (maternal)","👴"],["外婆","grandma (maternal)","👵"],["叔叔","uncle","👨"],["阿姨","aunt","👩"],["朋友","friend","👫"],["儿子","son","👦"],["女儿","daughter","👧"],["丈夫","husband","👨"],["妻子","wife","👩"],["父母","parents","👨👩"],["兄弟","brothers","👦👦"],["姐妹","sisters","👧👧"],["祖父母","grandparents","👴👵"],["孙子","grandson","👦"],["孙女","granddaughter","👧"],["堂兄弟","male cousin","👦"],["堂姐妹","female cousin","👧"],["侄子","nephew","👦"],["侄女","niece","👧"],["表兄弟","cousin (paternal)","👦"],["亲戚","relatives","👨👩"],["邻居","neighbor","🏠"],["同学","classmate","📚"],["老师","teacher","👩‍🏫"],["学生","student","📖"],["成人","adult","👨"],["孩子","child","👶"],["男人","man","👨"],["女人","woman","👩"],["男孩","boy","👦"],["女孩","girl","👧"],["双胞胎","twins","👫"],["新郎","groom","👨"],["新娘","bride","👩"],["继父","stepfather","👨"],["继母","stepmother","👩"],["养子","adopted son","👦"],["家人","family members","👨👩👧👦"]]},{"id":"verbs","name":"Verbs","pairs":[["跑","run","🏃"],["走","walk","🚶"],["吃","eat","🍽️"],["喝","drink","🥤"],["睡","sleep","😴"],["看","see","👀"],["听","listen","👂"],["说","say","🗣️"],["读","read","📖"],["写","write","✍️"],["唱","sing","🎤"],["玩","play","🎮"],["学习","study","📚"],["工作","work","💼"],["爱","love","❤️"],["喜欢","like","👍"],["想","think","🤔"],["来","come","👉"],["去","go","👋"],["买","buy","🛒"],["开","open","📂"],["关","close","❌"],["问","ask","❓"],["帮助","help","🆘"],["给","give","🎁"],["拿","take","✋"],["放","put","📍"],["坐","sit","🪑"],["站","stand","🧍"],["飞","fly","✈️"],["游泳","swim","🏊"],["爬","climb","🧗"],["跳","jump","⬆️"],["等","wait","⏳"],["教","teach","👩‍🏫"],["学","learn","📖"],["开始","start","▶️"],["完成","finish","🏁"],["忘记","forget","🤷"],["记得","remember","🧠"],["试","try","💪"],["需要","need","📌"],["要","want","🙏"],["做","do","✅"],["找","find","🔍"],["用","use","🔧"],["打电话","call","📞"],["回答","answer","💬"],["笑","laugh","😄"],["哭","cry","😢"],["画","draw","🖌️"],["跳舞","dance","💃"],["做饭","cook","👨‍🍳"],["洗","wash","🧼"]]}]}').sets;
     } catch (e) {
       return [
-        { id: "animals", name: "Animals", pairs: [["狗", "dog", "🐶"], ["猫", "cat", "🐱"], ["鸟", "bird", "🐦"], ["鱼", "fish", "🐟"], ["兔", "rabbit", "🐰"], ["马", "horse", "🐴"], ["牛", "cow", "🐄"], ["羊", "sheep", "🐑"], ["猪", "pig", "🐷"], ["鸡", "chicken", "🐔"], ["鸭", "duck", "🦆"], ["鼠", "mouse", "🐭"], ["虎", "tiger", "🐯"], ["龙", "dragon", "🐉"], ["蛇", "snake", "🐍"]] },
-        { id: "colors", name: "Colors", pairs: [["红", "red", "🔴"], ["蓝", "blue", "🔵"], ["黄", "yellow", "🟡"], ["绿", "green", "🟢"], ["黑", "black", "⚫"], ["白", "white", "⚪"], ["橙", "orange", "🟠"], ["紫", "purple", "🟣"], ["粉", "pink", "🌸"], ["棕", "brown", "🟤"], ["灰", "grey", "◻️"], ["金", "gold", "✨"], ["银", "silver", "⚪"], ["青", "cyan", "💎"], ["米", "beige", "🍚"]] },
+        { id: "animals", name: "Animals", pairs: [["狗", "dog", "🐶"], ["猫", "cat", "🐱"], ["鸟", "bird", "🐦"], ["鱼", "fish", "🐟"], ["兔子", "rabbit", "🐰"], ["马", "horse", "🐴"], ["牛", "cow", "🐄"], ["羊", "sheep", "🐑"], ["猪", "pig", "🐷"], ["鸡", "chicken", "🐔"], ["鸭子", "duck", "🦆"], ["老鼠", "mouse", "🐭"], ["老虎", "tiger", "🐯"], ["龙", "dragon", "🐉"], ["蛇", "snake", "🐍"]] },
+        { id: "colors", name: "Colors", pairs: [["红色", "red", "🔴"], ["蓝色", "blue", "🔵"], ["黄色", "yellow", "🟡"], ["绿色", "green", "🟢"], ["黑色", "black", "⚫"], ["白色", "white", "⚪"], ["橙色", "orange", "🟠"], ["紫色", "purple", "🟣"], ["粉色", "pink", "🌸"], ["棕色", "brown", "🟤"], ["灰色", "grey", "◻️"], ["金色", "gold", "✨"], ["银色", "silver", "⚪"], ["青色", "cyan", "💎"], ["米色", "beige", "🍚"]] },
         { id: "numbers", name: "Numbers", pairs: [["一", "one", "1️⃣"], ["二", "two", "2️⃣"], ["三", "three", "3️⃣"], ["四", "four", "4️⃣"], ["五", "five", "5️⃣"], ["六", "six", "6️⃣"], ["七", "seven", "7️⃣"], ["八", "eight", "8️⃣"], ["九", "nine", "9️⃣"], ["十", "ten", "🔟"], ["零", "zero", "0️⃣"], ["百", "hundred", "💯"], ["千", "thousand", "🔢"], ["半", "half", "➗"], ["两", "two (counting)", "2️⃣"]] },
-        { id: "family", name: "Family", pairs: [["妈妈", "mom", "👩"], ["爸爸", "dad", "👨"], ["哥哥", "older brother", "👦"], ["姐姐", "older sister", "👧"], ["弟弟", "younger brother", "👦"], ["妹妹", "younger sister", "👧"], ["爷爷", "grandpa", "👴"], ["奶奶", "grandma", "👵"], ["宝宝", "baby", "👶"], ["家", "family", "🏠"], ["外公", "grandpa (maternal)", "👴"], ["外婆", "grandma (maternal)", "👵"], ["叔叔", "uncle", "👨"], ["阿姨", "aunt", "👩"], ["朋友", "friend", "👫"]] },
+        { id: "family", name: "Family", pairs: [["妈妈", "mom", "👩"], ["爸爸", "dad", "👨"], ["哥哥", "older brother", "👦"], ["姐姐", "older sister", "👧"], ["弟弟", "younger brother", "👦"], ["妹妹", "younger sister", "👧"], ["爷爷", "grandpa", "👴"], ["奶奶", "grandma", "👵"], ["宝宝", "baby", "👶"], ["家庭", "family", "🏠"], ["外公", "grandpa (maternal)", "👴"], ["外婆", "grandma (maternal)", "👵"], ["叔叔", "uncle", "👨"], ["阿姨", "aunt", "👩"], ["朋友", "friend", "👫"]] },
         { id: "verbs", name: "Verbs", pairs: [["跑", "run", "🏃"], ["走", "walk", "🚶"], ["吃", "eat", "🍽️"], ["喝", "drink", "🥤"], ["睡", "sleep", "😴"], ["看", "see", "👀"], ["听", "listen", "👂"], ["说", "say", "🗣️"], ["读", "read", "📖"], ["写", "write", "✍️"], ["唱", "sing", "🎤"], ["玩", "play", "🎮"], ["学习", "study", "📚"], ["工作", "work", "💼"], ["爱", "love", "❤️"]] }
       ];
     }
   })() };
 
   const builtinDailyPairs = [
-    ["桌子", "table", "🪑"], ["椅子", "chair", "🪑"], ["床", "bed", "🛏️"], ["沙发", "sofa", "🛋️"], ["门", "door", "🚪"], ["窗", "window", "🪟"],
-    ["灯", "lamp", "💡"], ["书", "book", "📖"], ["笔", "pen", "🖊️"], ["手机", "phone", "📱"], ["电脑", "computer", "💻"], ["杯子", "cup", "🥤"],
-    ["碗", "bowl", "🥣"], ["盘子", "plate", "🍽️"], ["刀", "knife", "🔪"], ["叉子", "fork", "🍴"], ["勺子", "spoon", "🥄"], ["钥匙", "key", "🔑"]
+    ["桌子", "table", "🍽️"], ["椅子", "chair", "🪑"], ["床", "bed", "🛏️"], ["沙发", "sofa", "🛋️"], ["门", "door", "🚪"], ["窗户", "window", "🪟"],
+    ["灯", "lamp", "💡"], ["书", "book", "📖"], ["笔", "pen", "🖊️"], ["电话", "phone", "📱"], ["电脑", "computer", "💻"], ["杯子", "cup", "🥤"],
+    ["碗", "bowl", "🥣"], ["盘子", "plate", "🍴"], ["刀", "knife", "🔪"], ["叉子", "fork", "🍴"], ["勺子", "spoon", "🥄"], ["钥匙", "key", "🔑"]
   ];
 
   function loadDailyWords() {
